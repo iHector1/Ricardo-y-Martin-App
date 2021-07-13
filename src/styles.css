@@ -1,6 +1,22 @@
 html {
     scroll-behavior: smooth;
 }
+::-webkit-scrollbar {
+    width: 5px;
+  }
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #fdfdfd;
+  }
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: rgb(143, 140, 140);
+    width: 10px;
+  }
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(201, 190, 190);
+}
 .container {
     margin-top: 4rem;
 }
@@ -17,14 +33,6 @@ html {
 .card:hover {
     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.24);
     cursor: pointer;
-}
-.card img {
-    opacity: 0.7;
-    width: 100%;
-    transition: opacity 0.7;
-}
-.card img:hover {
-    opacity: 1;
 }
 .card .card-inner {
     padding: 10px;

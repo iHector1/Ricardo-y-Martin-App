@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, Inject, OnInit } from '@angular/core';
 import { filter, take } from 'rxjs/operators';
 import { Character } from '@app/shared/interface/characters.interface';
 import { CharacterService } from '@app/shared/services/character.service';
+import { DOCUMENT } from '@angular/common';
+import { ActivatedRoute, NavigationEnd, ParamMap, Router} from '@angular/router';
+import { ThrowStmt } from '@angular/compiler';
 type RequestInfo = {
   next: string;
 };
@@ -16,24 +19,67 @@ export class CharacterListComponent implements OnInit {
     next: " ",
   };
   private pageNum = 1;
-  private query: string="";
+  private query: string=""; 
   private hideScrollHeigth = 200;
   private showScrollHeigth = 500;
+  showGoUpButton: boolean=false;
 
 
-  constructor(private characterService:CharacterService) { }
+  constructor( @Inject(DOCUMENT) private document:Document,private characterService: CharacterService, private route: ActivatedRoute, private router: Router) {
+    this.onUrlChanged();
+   }
 
   ngOnInit(): void {
-    this.getDataFromService();
+    //this.getCharactersByQuery();
   }
+  @HostListener('window:scroll', [])
+  onWindowScroll(): void {
+    const yOffSet = window.pageXOffset;
+    if ((yOffSet||this.document.documentElement.scrollTop||this.document.body.scrollTop)>this.showScrollHeigth) {
+      this.showGoUpButton = true;
+    } else if (this.showGoUpButton && (yOffSet || this.document.documentElement.scrollTop || this.document.body.scrollTop) < this.showScrollHeigth) {
+      this.showGoUpButton = false;
+      
+    }
+  }
+  onScrollDown():void {
+    if (this.info.next) {
+      this.pageNum++;
+      this.getDataFromService();
+    }
+  }
+
+  onScrollUp(): void {
+    this.document.body.scrollTop = 0;
+    this.document.documentElement.scrollTop = 0;
+  }
+  private onUrlChanged(): void{
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+        this.characters = [];
+        this.pageNum = 1;
+        this.getCharactersByQuery();
+      })
+  }
+  private getCharactersByQuery(): void {
+    this.route.queryParams.pipe(take(1)).subscribe((params: any) => {
+      console.log("Params", params);
+      this.query = params['q'];
+      this.getDataFromService();
+    });
+  }
+
   private getDataFromService():void {
     this.characterService.searchCharacters(this.query, this.pageNum).pipe(
       take(1)
-    ).subscribe((res: any) => { 
-      console.log("Response->", res);
-      const { info, results } = res;
-      this.characters = [...this.characters, ...results];
-      this.info = info;
-    })
+    ).subscribe((res: any) => {
+      if (res?.results.length) {
+        const { info, results } = res;
+        this.characters = [...this.characters, ...results];
+        this.info = info;
+      } else {
+        this.characters = [];
+      }
+    });
   }
 }
